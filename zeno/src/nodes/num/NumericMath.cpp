@@ -2,6 +2,7 @@
 #include <zeno/types/NumericObject.h>
 #include <zeno/utils/orthonormal.h>
 //#include <zeno/utils/logger.h>
+#include <functional>
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -221,6 +222,44 @@ ZENDEFNODE(CalcDirectionFromAngle, {
     },
     {
     {"vec3f", "direction"},
+    },
+    {},
+    {"math"},
+});
+
+struct BasicMath : INode {
+    virtual void apply() override {
+        auto operation = get_input2<std::string>("operation");
+        
+        std::function<float(float, float)> op;
+        if (operation == "add")
+            op = std::plus<int>();
+        else if (operation == "subtract")
+            op = std::minus<int>();
+        else if (operation == "multiply")
+            op = std::multiplies<int>();
+        else if (operation == "divide")
+            op = std::divides<int>();
+        else
+            throw Exception("bad operation enum: " + operation);
+
+        auto input1 = get_input<NumericObject>("1stvalue")->get<float>();
+        auto input2 = get_input<NumericObject>("2ndvalue")->get<float>();
+
+        int result = op(input1, input2);
+
+        set_output("result", std::make_shared<NumericObject>(result));
+    }
+};
+
+ZENDEFNODE(BasicMath, {
+    {
+    {"enum add subtract multiply divide", "operation", "add"},
+    {"int", "1stvalue", "0"},
+    {"int", "2ndvalue", "0"},
+    },
+    {
+    {"int", "result"},
     },
     {},
     {"math"},
